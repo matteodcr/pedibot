@@ -6,4 +6,4 @@
 
 **.recap** : Sum up who participate
 
-**.me** : Tell you what hour you need to leave
+**.me** *<hour>* : Tell you what hour you need to leave
