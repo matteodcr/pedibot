@@ -1,39 +1,49 @@
 import discord
-import random
-import os
 from discord.ext import commands
+import asyncio
 
-from utils import *
+import os
 
-client = commands.Bot(command_prefix='.')
+from utils import belong, time_to_int, message
 
-'''Variables'''
+client = commands.Bot(command_prefix='🦶 ')
+
+# Variables
 id_bot = os.environ["ID_BOT"]
 liste_id_participant = []
 current_id_vote = None
 h = None
 
-'''Event'''
+# Event
+
+
 @client.event
 async def on_ready():
     print("Go")
+
 
 @client.event
 async def on_reaction_add(reaction, user):
     print("react!!!")
     msg_id = reaction.message.id
-    if reaction.emoji == "🏃":
-        if (belong(liste_id_participant, user.id)==False) and (msg_id == current_id_vote) and (user.id != id_bot):
-            liste_id_participant.append(user.id)
-            print(liste_id_participant)
+    if reaction.emoji == "🏃" \
+            and (belong(liste_id_participant, user.id) is False) \
+            and (msg_id == current_id_vote) \
+            and (user.id != id_bot):
+        liste_id_participant.append(user.id)
+        print(liste_id_participant)
 
 
-'''Commands'''
+# Commands
+
+
 @client.command(aliases=['self'])
 async def me(msg, arg):
     identifiant = msg.author.id
     reponse = time_to_int(arg, identifiant)
-    await msg.send(f'Hey <@{identifiant}> si tu veux arriver à {arg} tu vas devoir partir à **{reponse}**')
+    await msg.send(f'Hey <@{identifiant}> si tu veux arriver à {arg} \
+                     tu vas devoir partir à **{reponse}**')
+
 
 @client.command(aliases=['create'])
 async def new(msg, arg):
@@ -46,10 +56,14 @@ async def new(msg, arg):
     vote = await msg.send(f'Nouveau Pedibus pour {arg}, qui vient ?')
     await vote.add_reaction("🏃")
     current_id_vote = vote.id
-    
+
+
 @client.command(aliases=['recap'])
-async def resume(msg):
+async def resume(ctx):
     reponse = message(liste_id_participant, h)
-    await msg.send(f'{reponse}')
+    x = await ctx.send('Chargement')
+    await asyncio.sleep(0.3)
+    await x.edit(content=reponse)
+
 
 client.run(os.environ["DISCORD_TOKEN"])
