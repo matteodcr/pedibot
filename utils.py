@@ -3,6 +3,19 @@ from datetime import datetime, timedelta
 
 from data import USERS
 
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 TIME_REGEX = re.compile(r"(\d{1,2})[hH](\d{1,2})?")
 
 
@@ -28,6 +41,11 @@ assert parse_hour("9H30", now=datetime(year=1984, month=1, day=10, hour=6))\
                  == datetime(year=1984, month=1, day=10, hour=9, minute=30)
 assert parse_hour("8h", now=datetime(year=1984, month=1, day=10, hour=18))\
                  == datetime(year=1984, month=1, day=11, hour=8, minute=00)
+
+
+def add_dico(name, id, distance):
+    distance = int(distance)
+    USERS[id]= {"name": name, "distance": distance}
 
 
 def time_to_int(string: str, identifiant: int):
@@ -60,3 +78,12 @@ def message(list: list, string: str) -> str:
         msg = msg + "<@" + str(id) + "> doit partir à **" + str(t) + "**\n"
 
     return msg
+
+
+def print_ruler():
+    print("====================")
+
+
+def printd():
+    print("USERS = ", end='')
+    print(USERS)

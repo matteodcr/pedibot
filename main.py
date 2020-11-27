@@ -2,60 +2,102 @@ import discord
 from discord.ext import commands
 import asyncio
 
-import os
+from data import USERS
+from utils import bcolors, add_dico, time_to_int, belong,\
+     message, print_ruler, printd
 
-from utils import belong, time_to_int, message
 
-client = commands.Bot(command_prefix='🦶 ')
+print(f"{bcolors.OKGREEN}Lancement du Pedibot{bcolors.ENDC}")
+token = input("Veuillez entrer le token du bot : \n")
+client = commands.Bot(command_prefix='.')
 
 # Variables
-id_bot = os.environ["ID_BOT"]
+
 liste_id_participant = []
 current_id_vote = None
 h = None
+
 
 # Event
 
 
 @client.event
 async def on_ready():
-    print("Go")
+    print_ruler()
+    print(bcolors.BOLD +"Pedibot Initialisé :)"+ bcolors.ENDC)
+    print(f'{bcolors.WARNING}NOM: {bcolors.ENDC}{client.user.name}')
+    print(f'{bcolors.OKCYAN}ID: {bcolors.ENDC}{client.user.id}')
+    print_ruler()
+    await client.change_presence(activity=discord.Game(name=".aled"))
 
 
 @client.event
 async def on_reaction_add(reaction, user):
-    print("react!!!")
     msg_id = reaction.message.id
-    if reaction.emoji == "🏃" \
-            and (belong(liste_id_participant, user.id) is False) \
+    if reaction.emoji == "🏃":
+        if (user.id not in USERS):
+            await user.send("Hey, <@{user.id}> il semblerait que tu"
+                            + "ne fasse pas partie de ma base de donnée, "
+                            + "ajoute toi avec la commande"
+                            + "**.add <nom> <distance>**")
+
+        elif (belong(liste_id_participant, user.id) is False) \
             and (msg_id == current_id_vote) \
-            and (user.id != id_bot):
-        liste_id_participant.append(user.id)
-        print(liste_id_participant)
+                and (user.id != client.user.id):
+            liste_id_participant.append(user.id)
+            print(f'Liste des participants au vote : {liste_id_participant}')       
 
 
 # Commands
 
 
 @client.command(aliases=['self'])
-async def me(msg, arg):
+async def me(msg, *args):
     identifiant = msg.author.id
-    reponse = time_to_int(arg, identifiant)
-    await msg.send(f'Hey <@{identifiant}> si tu veux arriver à {arg} \
-                     tu vas devoir partir à **{reponse}**')
+
+    if (identifiant not in USERS):
+        await msg.author.send("Hey, il semblerait que tu ne fasse"
+                              + "pas partie de ma base de donnée,"
+                              + "ajoute toi avec la commande "
+                              + "**.add <nom> <distance>**")
+
+    if (len(args) != 1):
+        await msg.author.send("Format souhaité .self <heure>")
+
+    else:
+        reponse = time_to_int(args[0], identifiant)
+        await msg.author.send(f'Hey <@{msg.author.id}> si tu veux arriver à {args[0]} \
+                    tu vas devoir partir à **{reponse}**')
 
 
 @client.command(aliases=['create'])
-async def new(msg, arg):
-    global current_id_vote
-    global liste_id_participant
-    global h
-    liste_id_participant = []
-    h = arg
+async def new(msg, *args):
+    if (len(args) != 1):
+        await msg.send("Format souhaité .new <heure>")
 
-    vote = await msg.send(f'Nouveau Pedibus pour {arg}, qui vient ?')
-    await vote.add_reaction("🏃")
-    current_id_vote = vote.id
+    else:
+        if (USERS == {}):
+            await msg.send("Personne dans ma base de donnée, ajoute toi avec la commande **.add <nom> <distance>**")
+
+        else:
+            global current_id_vote
+            global liste_id_participant
+            global h
+            liste_id_participant = []
+            h = args[0]
+            vote = await msg.send(f'Nouveau Pedibus pour {args[0]}, qui vient ?')
+            await vote.add_reaction("🏃")
+            current_id_vote = vote.id
+
+
+@client.command()
+async def add(msg, *args):
+    if (len(args) != 2):
+        await msg.send(".add <nom> <distance>")
+    else:
+        id = msg.author.id
+        add_dico(args[0], id, args[1])
+        printd()
 
 
 @client.command(aliases=['recap'])
@@ -66,4 +108,15 @@ async def resume(ctx):
     await x.edit(content=reponse)
 
 
-client.run(os.environ["DISCORD_TOKEN"])
+@client.command()
+async def aled(ctx):
+    reponse = """
+Voici les commandes que tu peux utiliser :
+**.new** *hour* : Create a new pedibus and start a vote
+**.recap** : Sum up who participate
+**.add** *name* *distance* : Add you to the database
+**.me** *hour* : Tell you what hour you need to leave"""
+    await ctx.author.send(reponse)
+
+
+client.run(f"{token}")
